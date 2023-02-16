@@ -1,3 +1,4 @@
+###### author: Senua Blade
 # import matplotlib
 import matplotlib.colors
 from tkinter import *
@@ -13,25 +14,18 @@ from tkinter.filedialog import askopenfile
 from tkinter.messagebox import showinfo
 import webbrowser
 import sqlite3
+import string
+import random  # to generate a random identifier for a palette
+from datetime import datetime as current_date
 
-'''
-my_connection = sqlite3.connect('palette_db')
-print('Connected to db successfully')
-cursor = my_connection.cursor()
+import DatabaseChecker  # Handles some main functions for the palette.db database
 
-create_users_sql = "CREATE TABLE Users (first_name TEXT, second_name TEXT)"
-#cursor.execute(create_users_sql)
-
+# Check if the database is available at the start
 try:
-    my_data = ('Senua', 'Blade')
-    my_query = "INSERT INTO Users VALUES(?,?)"
-    cursor.execute(my_query, my_data)
-    my_connection.commit()
-    my_connection.close()
-    print("Success")
-except sqlite3.Error as my_error:
-    print(f"An error has occured {my_error}")
-'''
+    my_connection = sqlite3.connect('palette.db')
+    cursor = my_connection.cursor()
+except sqlite3.Error as error:
+    print("Error", error)
 
 
 class Palette:
@@ -46,10 +40,11 @@ class Palette:
     def generate_palette(self, colors, color_list=None):
         self.palette_colors = colors
         self.palette_length = len(colors)
+
         self.container.configure(width=self.palette_length * 50)
 
         self.palette_canvas = Canvas(master=self.container, height=100, width=self.palette_length * 50, bg='#fff')
-        self.palette_canvas.pack(side=LEFT, expand=True)
+        self.palette_canvas.pack(side=LEFT, expand=True, ipady=5, ipadx=5, pady=10)
 
         bottom_frame = Frame(self.container)
         bottom_frame.pack(side=BOTTOM)
@@ -76,7 +71,50 @@ class Palette:
         palette_canvas.create_text(75, 50, text=colors[0], fill='black', font='Helvetica 10')
             '''
 
+        self.save_to_db()  # Call to save the palette to the database
         self.container.mainloop()
+
+    def save_to_db(self):
+        print("CHECK")
+        random_id = ''.join((random.choice(string.ascii_lowercase) for x in range(10)))
+
+        save_palette_to_db = "INSERT INTO My_Palettes VALUES (?, ?, ?, ?)"
+        formatted_date = current_date.now().strftime('%Y-%m-%d %H:%M:%S')
+        print(formatted_date)
+        data = (random_id, 'palette_1', formatted_date, self.palette_length)
+
+        save_color_to_db = "INSERT INTO Palette_Colors(palette_id) VALUES (?)"
+
+        try:
+            print("Data 1")
+            cursor.execute(save_palette_to_db, data)
+            my_connection.commit()
+            print("Data 2")
+            cursor.execute(save_color_to_db, [random_id])
+            my_connection.commit()
+            print("Data DONE")
+        except sqlite3.Error as error:
+            # in the event of error
+            my_connection.rollback()
+            print("Error: ", error)
+
+        try:
+            for value in range(self.palette_length):
+                print("Data {}".format(value))
+                color_id = f"color_id_{value + 1}"
+                save_color_to_db = f"UPDATE Palette_Colors SET {color_id} = '{self.palette_colors[value]}' WHERE palette_id = '{random_id}'"
+                print(save_color_to_db)
+                data_2 = (self.palette_colors[value])
+                print(data_2)
+
+                cursor.execute(save_color_to_db)
+                # cursor.execute(save_color_to_db, data_2)
+                my_connection.commit()
+            print("Data DONE 2")
+        except sqlite3.Error as error:
+            print("An Error has occurred: ", str(error))
+            my_connection.rollback()
+        my_connection.close()
 
     def save_palette(self):
         save_img = Image.new("RGB", (50 * self.palette_length, 50), 'white')
@@ -99,7 +137,7 @@ class Palette:
         save_img.save("palette.jpg")
         showinfo(
             title='Information',
-            message='Picture saved to current directory as ./palette.jpg'
+            message='Picture saved to current directory as ./saves/palette.jpg'
         )
 
 
@@ -142,7 +180,7 @@ def get_points(filename):
             new_rgb.append(tuple(rgb))
 
         # Store the color codes in a separate file
-        with open("colors.txt", "w") as f:
+        with open("saves/colors.txt", "w") as f:
             f.write("HEX Codes" + "\n")
             for color in colors:
                 f.write(str(color) + "\n")
@@ -233,6 +271,8 @@ file_menu = Menu(menu_bar, tearoff=0)
 # add_command() -- adds a menu item to the menu
 file_menu.add_command(label="New")
 file_menu.add_command(label='Open')
+file_menu.add_separator()
+file_menu.add_command(label='Clear Saved Palettes', command=lambda: DatabaseChecker.delete_color_records())
 # ad_separator() -- adds a separator line to the menu
 file_menu.add_separator()
 file_menu.add_command(label='Close App', command=lambda: window.quit())
@@ -245,6 +285,7 @@ edit_menu.add_command(label="Undo")
 edit_menu.add_separator()
 edit_menu.add_command(label='Cut')
 edit_menu.add_command(label='Copy')
+edit_menu.add_command(label='Delete Graph')
 
 # Example of a menu inside another menu
 # edit_menu.add_cascade(label='Edit', menu=file_menu)
@@ -326,7 +367,7 @@ def open_color_file():
     scrollbar.config(command=listbox.yview)
     # palette_win.mainloop()
     colors = []
-    with open('./colors.txt') as file:
+    with open('saves/colors.txt') as file:
         for line in file:
             if line[0] == '#':
                 print(line)
