@@ -1,0 +1,8 @@
+PySimpleGUI~=4.60.4
+PyAutoGUI~=0.9.53
+Pillow~=9.4.0
+extcolors~=1.0.0
+numpy~=1.24.2
+matplotlib~=3.6.3
+pandas~=1.5.3
+scipy~=1.10.0
