@@ -19,6 +19,7 @@ import random  # to generate a random identifier for a palette
 from datetime import datetime as current_date
 
 import DatabaseChecker  # Handles some main functions for the palette.db database
+import FrameList
 
 # Check if the database is available at the start
 try:
@@ -31,6 +32,7 @@ except sqlite3.Error as error:
 class Palette:
     def __init__(self, container=None):
         # The main window to hold the palette canvas
+        self.palette_dict = None
         self.palette_colors = None
         self.palette_canvas = None
         self.container = container
@@ -75,13 +77,13 @@ class Palette:
         self.container.mainloop()
 
     def save_to_db(self):
-        print("CHECK")
+        row_count = DatabaseChecker.get_row_count()
         random_id = ''.join((random.choice(string.ascii_lowercase) for x in range(10)))
 
-        save_palette_to_db = "INSERT INTO My_Palettes VALUES (?, ?, ?, ?)"
+        save_palette_to_db = "INSERT INTO My_Palettes VALUES (?, ?, ?, ?, ?)"
         formatted_date = current_date.now().strftime('%Y-%m-%d %H:%M:%S')
         print(formatted_date)
-        data = (random_id, 'palette_1', formatted_date, self.palette_length)
+        data = (random_id, 'palette_1', formatted_date, self.palette_length, (row_count+1))
 
         save_color_to_db = "INSERT INTO Palette_Colors(palette_id) VALUES (?)"
 
@@ -348,9 +350,10 @@ def open_new_project_window():
 def open_color_file():
     palette_win = Tk()
     palette_win.title('My Palettes')
-    palette_win.geometry('250x100')
+    palette_win.geometry('500x400')
     palette_win.resizable(False, False)
 
+    '''
     # A listbox to attach to the root window containing all color palettes
     listbox = Listbox(master=palette_win)
     listbox.pack(side=LEFT, fill=BOTH)
@@ -373,9 +376,16 @@ def open_color_file():
                 print(line)
                 colors.append(line[0:7])
     print(colors)
-
     previous_palette = Palette(palette_win)
     previous_palette.generate_palette(colors=colors)
+    '''
+    previous_palettes = DatabaseChecker.read_color_records()
+    my_list = FrameList.FrameList(palette_win)
+    print(previous_palettes)
+    my_list.create_frames(previous_palettes)
+    my_list.pack(fill="both", expand=True, padx=20, pady=20)
+
+    palette_win.mainloop()
 
 
 # Frame for button border
