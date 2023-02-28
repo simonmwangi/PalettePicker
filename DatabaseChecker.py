@@ -1,6 +1,7 @@
 import sqlite3
 from tkinter.messagebox import showinfo
 
+
 try:
     my_connection = sqlite3.connect('palette.db')
     cursor = my_connection.cursor()
@@ -15,7 +16,7 @@ def read_color_records():
                     "Palette_Colors.color_id_4,Palette_Colors.color_id_5,Palette_Colors.color_id_6," \
                     "Palette_Colors.color_id_7,Palette_Colors.color_id_8,Palette_Colors.color_id_9," \
                     "Palette_Colors.color_id_10 FROM My_Palettes JOIN Palette_Colors ON Palette_Colors.palette_id =" \
-                    "My_Palettes.palette_id"
+                    "My_Palettes.palette_id ORDER BY created_date DESC"
     cursor.execute(palettes_view)
 
     rows = cursor.fetchall()  # Fetch all rows from the JOIN query
@@ -32,7 +33,7 @@ def delete_color_records():
     cursor.execute("""DELETE FROM My_Palettes""")
     cursor.execute("""DELETE FROM Palette_Colors""")
     my_connection.commit()
-    my_connection.close()
+    #my_connection.close()
     showinfo(
         title="Competed",
         message='Palette Database has been erased'
