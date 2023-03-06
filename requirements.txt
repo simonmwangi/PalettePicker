@@ -10,3 +10,5 @@ requests~=2.28.2
 swatch~=0.4.0
 opencv-python~=4.7.0.72
 customtkinter~=5.1.2
+pyperclip~=1.8.2
+tkextrafont~=0.6.3

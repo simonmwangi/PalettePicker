@@ -1,11 +1,15 @@
-# image_viewer.py
+import tkinter
 
+import cv2
+import customtkinter as ctk
+import app_windows
+
+'''
 import io
 import os
 import PySimpleGUI as sg
 from PIL import Image
 import pyautogui
-
 
 file_types = [("JPEG (*.jpg)", "*.jpg"),
               ("All files (*.*)", "*.*")]
@@ -47,7 +51,10 @@ def main():
 
 
     window.close()
-
+'''
 
 if __name__ == "__main__":
-    main()
+
+    # This is where the application will start
+    my_app = app_windows.WelcomeWindow()
+    my_app.mainloop()
