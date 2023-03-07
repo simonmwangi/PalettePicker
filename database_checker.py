@@ -3,7 +3,7 @@ from tkinter.messagebox import showinfo
 
 
 try:
-    my_connection = sqlite3.connect('palette.db')
+    my_connection = sqlite3.connect('assets/palette.db')
     cursor = my_connection.cursor()
 except sqlite3.Error as error:
     print("Error", error)

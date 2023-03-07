@@ -1,7 +1,7 @@
 import tkinter as tk
 import customtkinter as ctk
 
-import DatabaseChecker
+import database_checker
 import app_windows
 
 '''
@@ -149,12 +149,11 @@ class CreateFrame(ctk.CTkFrame):
     def print_palette(self):
         print(self.palette_saved_colors)
         # TODO Find a way to load a workspace
-        global loaded_space
-        # space = loaded_space
-        if loaded_space is None:
 
-            loaded_space = app_windows.NewWorkspace()
-            app_windows.NewWorkspace.load_palette(loaded_space, self.palette_saved_colors)
+        # space = loaded_space
+        if self.loaded_space is None:
+            self.loaded_space = app_windows.NewWorkspace()
+            app_windows.NewWorkspace.load_palette(self.loaded_space, self.palette_saved_colors)
         else:
-            loaded_space.focus()
-            app_windows.NewWorkspace.load_palette(loaded_space, self.palette_saved_colors)
+            self.loaded_space.focus()
+            app_windows.NewWorkspace.load_palette(self.loaded_space, self.palette_saved_colors)

@@ -8,7 +8,6 @@ import shutil
 
 import matplotlib.colors
 from tkinter import *
-from tkextrafont import Font
 from tkinter.colorchooser import askcolor
 from customtkinter import *
 import customtkinter as ctk
@@ -32,13 +31,13 @@ from datetime import datetime as current_date
 import json
 import pyperclip  # to copy text to the clipboard
 
-import DatabaseChecker  # Handles some main functions for the palette.db database
+import database_checker  # Handles some main functions for the palette.db database
 import palette_frames
 import check_image
 
 # Check if the database is available at the start
 try:
-    my_connection = sqlite3.connect('palette.db')
+    my_connection = sqlite3.connect('assets\palette.db')
     cursor = my_connection.cursor()
 except sqlite3.Error as error:
     print("Error", error)
@@ -127,7 +126,7 @@ class Palette:
     def save_to_db(cls, my_colors):
         cls.palette_colors = my_colors
 
-        row_count = DatabaseChecker.get_row_count()
+        row_count = database_checker.get_row_count()
         cls.palette_id = ''.join((random.choice(string.ascii_lowercase) for x in range(10)))
         cls.palette_date = current_date.now().strftime('%Y-%m-%d %H:%M:%S')
         cls.palette_name = 'palette_' + str(row_count + 1)
@@ -275,7 +274,7 @@ class WelcomeWindow(tk.Tk):
         self.resizable(False, False)
 
         # Add a background image for the application welcome screen
-        welcome_bg = ImageTk.PhotoImage(Image.open(r"./assets/app_images/welcome-bg.jpg").resize((1000, 500)))
+        welcome_bg = ImageTk.PhotoImage(Image.open(r"assets\app_images\welcome-bg.jpg").resize((1000, 500)))
         self.welcome_bg = welcome_bg
         # welcome_bg = ctk.CTkImage(dark_image=Image.open('./assets/app_images/welcome-bg.jpg'), size=(1000, 500))
         welcome_canvas = Canvas(self, width=600, height=400)
@@ -382,7 +381,7 @@ class ColorSettingFrame(ctk.CTkFrame):
 
 
 def get_images_count():
-    dir_path = r'./assets/my_images'  # the directory path
+    dir_path = r'assets\my_images'  # the directory path
     count = 0
 
     for path in os.listdir(dir_path):  # iterate through the path
@@ -399,6 +398,7 @@ class NewImageWindow(ctk.CTkToplevel):
         self.geometry('400x300')
         self.configure(background="white")
         self.attributes('-topmost', True)
+        self.iconbitmap('logo.ico')
         self.images_count = get_images_count()
         self.my_master = master
         open_browser = ctk.CTkButton(master=self, text='Open Google Images',
@@ -430,7 +430,7 @@ class NewImageWindow(ctk.CTkToplevel):
             file_types = [('Compatible Files', '*.jpg, *.png')]
             filename = filedialog.askopenfilename(filetypes=file_types)
 
-            my_image = fr'.\assets\my_images\image_{self.images_count}.jpg'
+            my_image = fr'assets\my_images\image_{self.images_count}.jpg'
             shutil.copyfile(filename, my_image)  # copies the file to the user's images folder
 
             # Creates a button on the images frame where the user can load an image to the matplotlib canvas
@@ -447,10 +447,10 @@ class NewImageWindow(ctk.CTkToplevel):
         if len(image_url) != 0:
             if image_url[0] == 'd':
                 data_img = fr"{image_url[image_url.find(r'/9'):]}"
-                Image.open(io.BytesIO(base64.b64decode(data_img))).save('web-image.jpg')
+                Image.open(io.BytesIO(base64.b64decode(data_img))).save('test_images/web-image.jpg')
 
-                my_image = fr'.\assets\my_images\image_{self.images_count}.jpg'
-                shutil.copyfile('web-image.jpg', my_image)
+                my_image = fr'assets\my_images\image_{self.images_count}.jpg'
+                shutil.copyfile(r'test_images\web-image.jpg', my_image)
 
                 image = ctk.CTkImage(light_image=Image.open(my_image),
                                      size=(100, 50))
@@ -459,12 +459,12 @@ class NewImageWindow(ctk.CTkToplevel):
                               image=image, anchor=N, command=lambda: self.my_master.plot(my_image)).pack(pady=10)
 
                 self.destroy()
-                self.upload_file(self.my_master, 'web-image.jpg')
+                self.upload_file(self.my_master, r'test_images\web-image.jpg')
             else:
                 get_image_name = check_image.get_image(url=fr"{image_url}")
                 print(f'The image is {get_image_name}')
 
-                my_image = fr'.\assets\my_images\image_{self.images_count}.jpg'
+                my_image = fr'assets\my_images\image_{self.images_count}.jpg'
                 shutil.copyfile(get_image_name, my_image)
 
                 image = ctk.CTkImage(light_image=Image.open(my_image),
@@ -494,6 +494,8 @@ class NewWorkspace(ctk.CTkToplevel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
+        self.windows_menu = None
+        self.toggle_win_menu = None
         global loaded_space
         loaded_space = self
 
@@ -515,9 +517,10 @@ class NewWorkspace(ctk.CTkToplevel):
         self.configure(background="white")
         self.attributes('-topmost', False)
         self.resizable(False, False)
+        self.iconbitmap('logo.ico')
         self.grid_rowconfigure(0, weight=1)  # configure grid system
         self.grid_columnconfigure(1, weight=1)
-        # font = Font(root=self, file='assets/fonts/VeraMono.ttf', family='VeraMono')
+
         self.create_window_menu()  # The window's top menu
         self.protocol("WM_DELETE_WINDOW", lambda: destroyer(self))
 
@@ -677,25 +680,25 @@ class NewWorkspace(ctk.CTkToplevel):
 
     def create_window_menu(self):
         # Create a menu bar for the main window containing links and adding functionality
-        menu_bar = Menu(master=self)
+        self.menu_bar = Menu(master=self)
         # setting tearoff=0 to avoid the menu from being torn off where the first position 0 in the list of choices
         # is occupied by the tear-off element and the additional choices are added starting at position 1
-        file_menu = Menu(menu_bar, tearoff=0)
+        file_menu = Menu(self.menu_bar, tearoff=0)
         # add_command() -- adds a menu item to the menu
         file_menu.add_command(label="New Project", command=lambda: WelcomeWindow.open_new_image_window(self))
         file_menu.add_command(label='Open Project')
         file_menu.add_command(label='Close Project')
         file_menu.add_separator()
-        file_menu.add_command(label='Clear Saved Palettes', command=lambda: DatabaseChecker.delete_color_records())
+        file_menu.add_command(label='Clear Saved Palettes', command=lambda: database_checker.delete_color_records())
         file_menu.add_command(label='My Saved Palettes', command=lambda: open_my_palettes())
         # ad_separator() -- adds a separator line to the menu
         file_menu.add_separator()
         file_menu.add_command(label='Close App', command=lambda: destroyer(self))
 
         # add_cascade -- creates a new hierarchical menu by associating a given menu to a parent menu
-        menu_bar.add_cascade(label='File', menu=file_menu)
+        self.menu_bar.add_cascade(label='File', menu=file_menu)
 
-        edit_menu = Menu(menu_bar, tearoff=0)
+        edit_menu = Menu(self.menu_bar, tearoff=0)
         edit_menu.add_command(label="Undo")
         edit_menu.add_separator()
         edit_menu.add_command(label='Cut')
@@ -704,17 +707,19 @@ class NewWorkspace(ctk.CTkToplevel):
 
         # Example of a menu inside another menu
         # edit_menu.add_cascade(label='Edit', menu=file_menu)
-        menu_bar.add_cascade(label='Edit', menu=edit_menu)
+        self.menu_bar.add_cascade(label='Edit', menu=edit_menu)
 
-        windows_menu = Menu(menu_bar, tearoff=0)
-        windows_menu.add_command(label="Image Toolbar", command=lambda: self.open_image_toolbar(self.matplotlib_canvas))
-        windows_menu.add_separator()
-        windows_menu.add_command(label='Current Palette')
+        self.windows_menu = Menu(self.menu_bar, tearoff=0)
+        self.windows_menu.add_command(label="Image Toolbar",
+                                      command=lambda: self.open_image_toolbar(self.matplotlib_canvas))
+        #self.windows_menu.entryconfig(1, state=DISABLED)
+        self.windows_menu.add_separator()
+        self.windows_menu.add_command(label='Current Palette')
 
-        menu_bar.add_cascade(label='Windows', menu=windows_menu)
+        self.menu_bar.add_cascade(label='Windows', menu=self.windows_menu)
         #
         # Add the menu to the main window
-        self.config(menu=menu_bar)
+        self.config(menu=self.menu_bar)
 
     def delete_callback(self, win):
         win.destroy()
@@ -722,7 +727,7 @@ class NewWorkspace(ctk.CTkToplevel):
 
     # Opens the matplotlib toolbar for the loaded image graph
     def open_image_toolbar(self, canvas):
-        try:
+        if canvas is not None:
             if self.img_toolbar is None or not self.img_toolbar.winfo_exists():
                 # open an attributes windows for the selected text
                 self.img_toolbar = ctk.CTk()
@@ -749,11 +754,8 @@ class NewWorkspace(ctk.CTkToplevel):
                 toolbar = NavigationToolbar2Tk(self.matplotlib_canvas, frame)
                 toolbar.update()
                 # self.open_image_toolbar(canvas)
-        except:
-            tk.messagebox.showerror(
-                title='Warning',
-                message='Add an image first'
-            )
+        else:
+            tk.messagebox.showerror(title='No Image',message='Please add an image first')
 
     # plot function for plotting the graph in the tkinter window
     def plot(self, uploaded_img):
@@ -790,6 +792,8 @@ class NewWorkspace(ctk.CTkToplevel):
             def clear_graph():
                 for widgets in self.frame.winfo_children():
                     widgets.destroy()
+
+            #self.windows_menu.entryconfig(1, state='normal')  # enable the image toolbar toggle menu
 
     def get_points(self, filename, fig, selected_canvas=None):
 
@@ -1017,21 +1021,24 @@ def open_my_palettes():
     palette_win.title('My Palettes')
     palette_win.geometry('500x400')
     palette_win.resizable(False, False)
+    palette_win.iconbitmap('logo.ico')
     palette_win.grid_rowconfigure(0, weight=1)
     palette_win.grid_columnconfigure(0, weight=1)
 
     palette_frame = ctk.CTkScrollableFrame(master=palette_win, fg_color='transparent', corner_radius=0)
     palette_frame.grid(row=0, column=0, stick='nsew')
 
-    previous_palettes = DatabaseChecker.read_color_records()
+    previous_palettes = database_checker.read_color_records()
     for i in range(len(previous_palettes)):
         frame = palette_frames.CreateFrame(master=palette_frame)
+        frame.loaded_space = loaded_space
         frame.create_frame(previous_palettes[i])
         frame.pack()
 
     palette_win.mainloop()
 
-#"""MIGHT BE IMPORTANT LATER"""
+
+# """MIGHT BE IMPORTANT LATER"""
 '''
 but = ctk.CTkButton(
     master=window,
@@ -1125,4 +1132,3 @@ ax.axis('off')
 
 plt.imshow(bg)
 plt.show() '''
-

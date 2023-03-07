@@ -5,10 +5,7 @@
 #  in conjunction with Tcl version 8.6
 #    Mar 01, 2023 10:24:10 AM +03  platform: Windows NT
 
-import sys
 import tkinter as tk
-import tkinter.ttk as ttk
-from tkinter.constants import *
 
 import new_project_window
 

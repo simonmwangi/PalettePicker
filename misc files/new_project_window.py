@@ -8,7 +8,6 @@
 import sys
 import tkinter as tk
 import tkinter.ttk as ttk
-from tkinter.constants import *
 import os.path
 
 _script = sys.argv[0]
@@ -51,7 +50,7 @@ def _style_code():
     _style_code_ran = 1
 
 
-from PIL import Image, ImageTk
+from PIL import ImageTk
 
 
 class Toplevel1:
@@ -113,7 +112,7 @@ class Toplevel1:
         self.Label1.configure(foreground="#000000")
         # photo_location = os.path.join(_location,"../../../Pictures/toolbox.jpg")
         # global _img0
-        _img0 = ImageTk.PhotoImage(file="batman.png")
+        _img0 = ImageTk.PhotoImage(file="../test_images/batman.png")
         self.Label1.configure(image=_img0)
         self.Label1.configure(text='''My Tools''')
         self.add_image = tk.Button(self.Canvas2)
